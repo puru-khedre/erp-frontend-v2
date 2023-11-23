@@ -17,7 +17,12 @@ const Users = () => {
 
         const list = await res.json();
 
-        setData(list.result);
+        console.log({ list });
+        if (list.result) setData(list.result);
+        else {
+          setData([]);
+          throw new Error("Users list is empty");
+        }
         console.log(list.result);
       } catch (error) {
         console.log(error);

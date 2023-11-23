@@ -13,13 +13,11 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
-import TableSortLabel from "@mui/material/TableSortLabel";
 import Toolbar from "@mui/material/Toolbar";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
-import { visuallyHidden } from "@mui/utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function createData(id, name, calories, fat, carbs, protein) {
   return {
@@ -170,6 +168,31 @@ function All() {
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      setIsLoading(true);
+      try {
+        const res = await fetch("http://localhost:4000/users/userlist");
+
+        const list = await res.json();
+
+        console.log({ list });
+        if (list.result) setData(list.result);
+        else {
+          setData([]);
+          throw new Error("Users list is empty");
+        }
+        console.log(list.result);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    fetchData().then(() => setIsLoading(false));
+  }, []);
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
