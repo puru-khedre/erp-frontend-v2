@@ -4,6 +4,7 @@ import Loader from "../components/Loader";
 import { FaPlus } from "react-icons/fa";
 import Table from "../components/Table";
 import { Link } from "react-router-dom";
+import All from "./All";
 
 const Users = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -38,7 +39,7 @@ const Users = () => {
         <Loader />
       ) : (
         <>
-          <div className="w-full py-2 flex justify-between items-center flex-row">
+          <div className="w-full py-2 flex justify-between items-center flex-row mb-3">
             <div>
               <h1 className="text-3xl font-medium">Users</h1>
             </div>
@@ -50,7 +51,8 @@ const Users = () => {
               </Link>
             </div>
           </div>
-          <Table data={data} />
+          <All />
+          {/* <Table data={data} /> */}
         </>
       )}
     </div>

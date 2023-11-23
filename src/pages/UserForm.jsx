@@ -437,7 +437,7 @@ const NewUsers = ({ editMode }) => {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              required
+              required={!editMode}
               type="file"
               name="property_images"
               id="property_images"

@@ -7,7 +7,7 @@ const Layout = ({ Page }) => {
   return (
     <div className="flex relative">
       {activeMenu ? (
-        <div className="w-72 fixed sidebar bg-white shadow-lg border-r-2 border-gray-100">
+        <div className="w-72 fixed sidebar bg-white shadow-lg border-r-2 border-gray-100 z-10">
           <Sidebar />
         </div>
       ) : (

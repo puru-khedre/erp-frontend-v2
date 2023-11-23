@@ -18,70 +18,38 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
 import { useEffect, useState } from "react";
-
-function createData(id, name, calories, fat, carbs, protein) {
-  return {
-    id,
-    name,
-    calories,
-    fat,
-    carbs,
-    protein,
-  };
-}
-
-const rows = [
-  createData(1, "Cupcake", 305, 3.7, 67, 4.3),
-  createData(2, "Donut", 452, 25.0, 51, 4.9),
-  createData(3, "Eclair", 262, 16.0, 24, 6.0),
-  createData(4, "Frozen yoghurt", 159, 6.0, 24, 4.0),
-  createData(5, "Gingerbread", 356, 16.0, 49, 3.9),
-  createData(6, "Honeycomb", 408, 3.2, 87, 6.5),
-  createData(7, "Ice cream sandwich", 237, 9.0, 37, 4.3),
-  createData(8, "Jelly Bean", 375, 0.0, 94, 0.0),
-  createData(9, "KitKat", 518, 26.0, 65, 7.0),
-  createData(10, "Lollipop", 392, 0.2, 98, 0.0),
-  createData(11, "Marshmallow", 318, 0, 81, 2.0),
-  createData(12, "Nougat", 360, 19.0, 9, 37.0),
-  createData(13, "Oreo", 437, 18.0, 63, 4.0),
-];
+import Loader from "../components/Loader";
+import { Link } from "react-router-dom";
 
 const headCells = [
   {
     id: "name",
     numeric: false,
     disablePadding: true,
-    label: "Dessert (100g serving)",
+    label: "Name",
   },
   {
-    id: "calories",
-    numeric: true,
+    id: "email",
+    numeric: false,
     disablePadding: false,
-    label: "Calories",
+    label: "Email",
   },
   {
-    id: "fat",
-    numeric: true,
+    id: "address",
+    numeric: false,
     disablePadding: false,
-    label: "Fat (g)",
+    label: "Address",
   },
   {
-    id: "carbs",
-    numeric: true,
+    id: "actions",
+    numeric: false,
     disablePadding: false,
-    label: "Carbs (g)",
-  },
-  {
-    id: "protein",
-    numeric: true,
-    disablePadding: false,
-    label: "Protein (g)",
+    label: "Actions",
   },
 ];
 
 const EnhancedTableHead = (props) => {
   const { onSelectAllClick, numSelected, rowCount } = props;
-
   return (
     <TableHead>
       <TableRow>
@@ -91,15 +59,13 @@ const EnhancedTableHead = (props) => {
             indeterminate={numSelected > 0 && numSelected < rowCount}
             checked={rowCount > 0 && numSelected === rowCount}
             onChange={onSelectAllClick}
-            inputProps={{
-              "aria-label": "select all desserts",
-            }}
           />
         </TableCell>
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
-            align={headCell.numeric ? "right" : "left"}
+            // align={headCell.numeric ? "right" : "left"}
+            align="center"
             padding={headCell.disablePadding ? "none" : "normal"}
           >
             {headCell.label}
@@ -110,9 +76,30 @@ const EnhancedTableHead = (props) => {
   );
 };
 
+const createDetailsObject = (row) => {
+  const obj = {
+    address: row.address,
+    adhar_number: row.adhar_number,
+    blood_group: row.blood_group,
+    city: row.city,
+    date_of_birth: row.date_of_birth,
+    department: row.department,
+    designation: row.designation,
+    driving_license: row.driving_license,
+    email: row.email,
+    emergency_contact_person: row.emergency_contact_person,
+    emergency_contact_person_mobile: row.emergency_contact_person_mobile,
+    father_name: row.father_name,
+    mother_name: row.mother_name,
+    name: row.name,
+    phone_no_1: row.phone_no_1,
+    phone_no_2: row.phone_no_2,
+    state: row.state,
+  };
+  return obj;
+};
 function EnhancedTableToolbar(props) {
-  const { numSelected } = props;
-
+  const { numSelected, handleDelete, search, setSearch } = props;
   return (
     <Toolbar
       sx={{
@@ -137,19 +124,19 @@ function EnhancedTableToolbar(props) {
           {numSelected} selected
         </Typography>
       ) : (
-        <Typography
-          sx={{ flex: "1 1 100%" }}
-          variant="h6"
-          id="tableTitle"
-          component="div"
-        >
-          Nutrition
+        <Typography sx={{ flex: "1 1 100%" }} id="tableTitle" component="div">
+          <input
+            className="outline-none border border-gray-300 rounded-md p-2 focus-visible:ring-4 ring-indigo-200 focus-visible:border-indigo-400 w-2/3"
+            placeholder="Search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </Typography>
       )}
 
       {numSelected > 0 ? (
         <Tooltip title="Delete">
-          <IconButton>
+          <IconButton onClick={handleDelete}>
             <DeleteIcon />
           </IconButton>
         </Tooltip>
@@ -169,34 +156,32 @@ function All() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState(null);
+  const [search, setSearch] = useState("");
+  const [rows, setRows] = useState([]);
 
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
       try {
         const res = await fetch("http://localhost:4000/users/userlist");
-
         const list = await res.json();
-
-        console.log({ list });
-        if (list.result) setData(list.result);
-        else {
-          setData([]);
-          throw new Error("Users list is empty");
-        }
-        console.log(list.result);
+        if (list.result) setRows(list.result);
       } catch (error) {
         console.log(error);
+        throw new Error(error);
       }
     }
 
-    fetchData().then(() => setIsLoading(false));
+    fetchData()
+      .then(() => {
+        setIsLoading(false);
+      })
+      .catch(console.log);
   }, []);
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id);
+      const newSelected = rows.map((n) => n.user_id);
       setSelected(newSelected);
       return;
     }
@@ -220,6 +205,7 @@ function All() {
       );
     }
     setSelected(newSelected);
+    console.log(newSelected);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -237,82 +223,204 @@ function All() {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
+  const handleDelete = async (user_id) => {
+    try {
+      const res = await fetch(
+        `http://localhost:4000/users/user_delete/${user_id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (res.ok) {
+        // Remove the deleted user from the data array
+        // setRows((prevData) =>
+        //   prevData.filter((user) => user.user_id !== user_id)
+        // );
+      } else {
+        console.error("Delete request failed with status:", res.status);
+      }
+    } catch (error) {
+      console.error("Error during delete:", error);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    console.log("enter");
+    console.log(selected);
+    try {
+      // Ensure there are selected items before proceeding with deletion
+      if (selected.length === 0) {
+        console.warn("No items selected for deletion.");
+        return;
+      }
+
+      // Implement your server-side deletion logic here
+      // Replace the URL with your actual server endpoint
+      const deletePromises = selected.map(async (userId) => {
+        const res = await fetch(
+          `http://localhost:4000/users/user_delete/${userId}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!res.ok) {
+          console.error(
+            "Error deleting user with ID",
+            userId,
+            ":",
+            res.status,
+            res.statusText
+          );
+        }
+
+        return res.json(); // This assumes your server returns a JSON response
+      });
+
+      await Promise.all(deletePromises);
+
+      // Check the results if needed
+
+      // After deletion, you might want to refetch the data or update the local data array
+      // For simplicity, I'm resetting the selection here
+      setSelected([]);
+    } catch (error) {
+      console.error("Error deleting selected items:", error);
+    }
+  };
+
   return (
     <Box sx={{ width: "100%" }}>
       <Paper sx={{ width: "100%", mb: 2 }}>
-        <EnhancedTableToolbar numSelected={selected.length} />
-        <TableContainer>
-          <Table
-            sx={{ minWidth: 750 }}
-            aria-labelledby="tableTitle"
-            size={"medium"}
-          >
-            <EnhancedTableHead
+        {isLoading ? (
+          <Loader className="py-16" />
+        ) : (
+          <>
+            <EnhancedTableToolbar
+              search={search}
+              setSearch={setSearch}
               numSelected={selected.length}
-              onSelectAllClick={handleSelectAllClick}
-              rowCount={rows.length}
+              selected={selected}
+              handleDelete={handleDeleteSelected}
             />
-            <TableBody>
-              {rows.map((row, index) => {
-                const isItemSelected = isSelected(row.id);
-                const labelId = `enhanced-table-checkbox-${index}`;
+            <TableContainer>
+              <Table
+                sx={{ minWidth: 750 }}
+                aria-labelledby="tableTitle"
+                size={"medium"}
+              >
+                <EnhancedTableHead
+                  numSelected={selected.length}
+                  onSelectAllClick={handleSelectAllClick}
+                  rowCount={rows.length}
+                />
+                <TableBody>
+                  {rows
+                    .filter((row, i) => {
+                      const obj = createDetailsObject(row);
+                      console.log(JSON.stringify(obj).includes(search) && obj);
+                      return JSON.stringify(obj)
+                        .toLowerCase()
+                        .includes(search.toLowerCase());
+                    })
+                    .map((row, index) => {
+                      row.id = row.user_id;
+                      const isItemSelected = isSelected(row.id);
+                      const labelId = `enhanced-table-checkbox-${index}`;
 
-                return (
-                  <TableRow
-                    hover
-                    onClick={(event) => handleClick(event, row.id)}
-                    role="checkbox"
-                    aria-checked={isItemSelected}
-                    tabIndex={-1}
-                    key={row.id}
-                    selected={isItemSelected}
-                    sx={{ cursor: "pointer" }}
-                  >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={isItemSelected}
-                        inputProps={{
-                          "aria-labelledby": labelId,
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell
-                      component="th"
-                      id={labelId}
-                      scope="row"
-                      padding="none"
+                      return (
+                        <TableRow
+                          hover
+                          onClick={(event) => handleClick(event, row.id)}
+                          role="checkbox"
+                          aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={row.id}
+                          selected={isItemSelected}
+                          sx={{ cursor: "pointer" }}
+                        >
+                          <TableCell padding="checkbox">
+                            <Checkbox
+                              color="primary"
+                              checked={isItemSelected}
+                              inputProps={{
+                                "aria-labelledby": labelId,
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="none"
+                            align="center"
+                          >
+                            {row.name}
+                          </TableCell>
+                          <TableCell align="center">{row.email}</TableCell>
+                          <TableCell align="center">{row.address}</TableCell>
+                          <TableCell
+                            className="!flex flex-row gap-2 justify-center"
+                            align="center"
+                          >
+                            <Link
+                              className="text-blue-500 hover:text-blue-600 hover:underline"
+                              to={"user/" + row.user_id}
+                            >
+                              View
+                            </Link>
+                            <Link
+                              className="text-green-500 hover:text-green-600 hover:underline"
+                              to={`user/${row.user_id}/edit`}
+                            >
+                              Edits
+                            </Link>
+                            <button
+                              className="text-red-500 hover:text-red-600 hover:underline"
+                              onClick={() => handleDelete(row.user_id)}
+                            >
+                              Delete
+                            </button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  {emptyRows > 0 && (
+                    <TableRow
+                      style={{
+                        height: 53 * emptyRows,
+                      }}
                     >
-                      {row.name}
-                    </TableCell>
-                    <TableCell align="right">{row.calories}</TableCell>
-                    <TableCell align="right">{row.fat}</TableCell>
-                    <TableCell align="right">{row.carbs}</TableCell>
-                    <TableCell align="right">{row.protein}</TableCell>
-                  </TableRow>
-                );
-              })}
-              {emptyRows > 0 && (
-                <TableRow
-                  style={{
-                    height: 53 * emptyRows,
-                  }}
-                >
-                  <TableCell colSpan={6} />
-                </TableRow>
+                      <TableCell colSpan={6} />
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              {rows.filter((row, i) => {
+                const obj = createDetailsObject(row);
+                console.log(JSON.stringify(obj).includes(search) && obj);
+                return JSON.stringify(obj)
+                  .toLowerCase()
+                  .includes(search.toLowerCase());
+              }).length == 0 && (
+                <p className="w-full p-4 font-bold text-xl">{`No match found for '${search}'`}</p>
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={rows.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
+            </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={rows.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          </>
+        )}
       </Paper>
     </Box>
   );
